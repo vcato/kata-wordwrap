@@ -11,32 +11,22 @@ using std::cerr;
 
 static size_t findSpaceAfter(const string &s,size_t position)
 {
-  return std::find(s.begin()+position,s.end(),' ') - s.begin();
+  return std::find(s.begin() + position, s.end(),' ') - s.begin();
 }
 
 
+// Returns the position of the character just after the last space
+// that is before the given position, or 0 if there is no such character.
 static size_t findSpaceBefore(const string &s,size_t position)
 {
-  while (s[position]!=' ') {
-    if (position==0) {
-      return position;
-    }
-    --position;
-  }
-
-  return position;
+  auto i = std::make_reverse_iterator(s.begin() + position);
+  return s.rend() - std::find(i, s.rend(), ' ');
 }
 
 
-static size_t findBreakPoint(const string &s,size_t line_length)
+static size_t findNonSpaceBefore(const string &s,size_t position)
 {
-  size_t position = findSpaceBefore(s,line_length);
-
-  if (position==0) {
-    return findSpaceAfter(s,line_length);
-  }
-
-  while (s[position-1]==' ') {
+  while (position!=0 && s[position-1]==' ') {
     --position;
   }
 
@@ -56,7 +46,7 @@ static string rightPart(const string &s,size_t begin_position)
 }
 
 
-static size_t findNextNonSpace(const string &s,size_t position)
+static size_t findBeginningOfNextWord(const string &s,size_t position)
 {
   while (s[position]==' ') {
     ++position;
@@ -72,12 +62,20 @@ static string wordWrap(const string &s,size_t line_length)
     return s;
   }
 
-  size_t prev_end = findBreakPoint(s,line_length);
-  size_t next_begin = findNextNonSpace(s,prev_end);
+  size_t prev_end = findSpaceBefore(s,line_length + 1);
+
+  if (prev_end==0) {
+    prev_end = findSpaceAfter(s,line_length);
+  }
+  else {
+    prev_end = findNonSpaceBefore(s,prev_end);
+  }
 
   if (prev_end==s.length()) {
     return s;
   }
+
+  size_t next_begin = findBeginningOfNextWord(s,prev_end);
 
   string left = leftPart(s,prev_end);
   string right = wordWrap(rightPart(s,next_begin),line_length);
@@ -178,6 +176,17 @@ static void test8()
 }
 
 
+static void test9()
+{
+  string words = " test";
+  int line_length = 1;
+  string expected_result = "\ntest";
+
+  string result = wordWrap(words,line_length);
+  assert(result==expected_result);
+}
+
+
 int main()
 {
   test1();
@@ -188,4 +197,5 @@ int main()
   test6();
   test7();
   test8();
+  test9();
 }
